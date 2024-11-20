@@ -3,6 +3,9 @@ package com.postgresql.webDataLocalizer;
 import com.postgresql.webDataLocalizer.model.DataFetcherApp;
 import com.postgresql.webDataLocalizer.model.Person;
 import com.postgresql.webDataLocalizer.repo.PersonRepo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,8 @@ import java.util.UUID;
 
 @RestController
 public class PersonController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class);
+
     @Autowired //automatic dependency injection
     private DataFetcherApp dataFetcherApp;
     @Autowired
@@ -22,6 +27,7 @@ public class PersonController {
 
     @PostMapping("/addPersons")
     public ResponseEntity<String> addPersons(@RequestBody List<Person> persons) {
+        LOGGER.info("Received request to add persons: {}", persons);
         List<UUID> duplicateIds = new ArrayList<>();
         List<Person> conflictingPersons = new ArrayList<>();
 
@@ -43,6 +49,7 @@ public class PersonController {
 
             // Save the person to the database
             repo.save(person);
+            LOGGER.info("Person saved successfully: {}", person);
         }
 
         // Construct error messages if there are duplicates or conflicting persons
@@ -50,8 +57,10 @@ public class PersonController {
 
         // Return appropriate response
         if (errorMessage != null) {
+            LOGGER.error("Error adding persons: {}", errorMessage);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
         } else {
+            LOGGER.info("Persons added successfully");
             return ResponseEntity.ok("Persons added successfully");
         }
     }
@@ -74,18 +83,21 @@ public class PersonController {
 
     @GetMapping("/getAllPersons") // Endpoint to get all persons
     public ResponseEntity<List<Person>> getAllPersons() {
+        LOGGER.info("Received request to get all persons");
         List<Person> allPersons = repo.findAll();
         return ResponseEntity.ok(allPersons);
     }
 
     @DeleteMapping("/deleteAllPersons")
     public ResponseEntity<String> deleteAllPersons() {
+        LOGGER.info("Received request to delete all persons");
         repo.deleteAll();
         return ResponseEntity.ok("All persons deleted successfully");
     }
 
     @PostMapping("/storeLocally")
     public String handlePostmanRequest() {
+        LOGGER.info("Received request to store data locally");
         // Define the API URL
         String apiUrl = "http://localhost:8080/getAllPersons";
 
@@ -95,10 +107,16 @@ public class PersonController {
 
         // Call the fetchDataAndStoreLocally method
         dataFetcherApp.fetchDataAndStoreLocally(apiUrl, filePath);
+        LOGGER.info("Data fetched and stored locally at: {}", filePath);
 
         // Log completion message
         return "Data fetching and storing completed.";
-
-
+    }
+    
+    @GetMapping("/countPersons")
+    public ResponseEntity<Long> countPersons() {
+        LOGGER.info("Received request to count persons");
+        long count = repo.count(); // Using JpaRepository's count method
+        return ResponseEntity.ok(count);
     }
 }

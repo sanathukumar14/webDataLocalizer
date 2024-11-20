@@ -1,5 +1,7 @@
 package com.postgresql.webDataLocalizer.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.FileOutputStream;
@@ -10,7 +12,7 @@ import java.net.URLConnection;
 
 @Component
 public class DataFetcherApp {
-
+	private static final Logger LOGGER = LoggerFactory.getLogger(DataFetcherApp.class);
     public void fetchDataAndStoreLocally(String apiUrl, String filePath) {
         try {
             // Create URL object
@@ -38,9 +40,9 @@ public class DataFetcherApp {
             inputStream.close();
             outputStream.close();
 
-            System.out.println("Data fetched from URL and stored locally at: " + filePath);
+            LOGGER.info("Data fetched from URL and stored locally at: " + filePath);
         } catch (IOException e) {
-            System.err.println("Error fetching data: " + e.getMessage());
+            LOGGER.error("Error fetching data: " + e.getMessage());
             e.printStackTrace();
         }
     }
